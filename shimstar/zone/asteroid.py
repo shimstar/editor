@@ -10,6 +10,9 @@ class Asteroid:
 		self.posx=0
 		self.posy=0
 		self.posz=0
+		self.scale = 0
+		self.eggMiddle= ""
+		self.eggFar = ""
 		self.minerals={}
 		if self.idTemplate>0:
 			self.loadFromTemplate()
@@ -20,7 +23,7 @@ class Asteroid:
 		return self.posx,self.posy,self.posz
 		
 	def loadFromTemplate(self):
-		query="SELECT star013_name, star013_egg, star013_mass, star013_text"
+		query="SELECT star013_name, star013_egg, star013_mass, star013_text,star013_egg_midle,star013_egg_far"
 		query+=" FROM STAR013_asteroid_template"
 		query+=" WHERE star013_id='" + str(self.idTemplate) + "'"
 		instanceDbConnector=shimDbConnector.getInstance()
@@ -32,6 +35,8 @@ class Asteroid:
 			self.egg=row[1]
 			self.mass=float(row[2])
 			self.text=row[3]
+			self.eggMiddle = row[4]
+			self.eggFar = row[5]
 		cursor.close()
 		
 		query="SELECT STAR058_idmineral_star004, star058_nb from star058_ast_mineral where star058_idast_star013 = '" + str(self.idTemplate) + "'"
@@ -48,7 +53,7 @@ class Asteroid:
 		#~ query="SELECT STAR013_name, STAR013_egg, STAR013_mass, STAR013_text FROM star013_asteroid_template"
 		#~ query+=" WHERE STAR013_id = '" + self.id + "'"
 		query="SELECT STAR014_posx, star014_posy, star014_posz, star014_hprh,star014_hprp,star014_hprr"
-		query+=" ,star013_name, star013_egg, star013_mass, star013_text,STAR013_id"
+		query+=" ,star013_name, star013_egg, star013_mass, star013_text,STAR013_id, star014_scale,star013_egg_midle,star013_egg_far"
 		query+=" FROM STAR014_asteroid JOIN star013_asteroid_template on STAR014_template_star013 = STAR013_id"
 		query+=" WHERE STAR014_ID = '" + str(self.id)+ "'"
 		#~ print query
@@ -68,6 +73,9 @@ class Asteroid:
 			self.mass=float(row[8])
 			self.text=row[9]
 			self.idTemplate=int(row[10])
+			self.scale=int(row[11])
+			self.eggMiddle = row[12]
+			self.eggFar = row[13]
 		cursor.close()
 		
 
@@ -161,6 +169,10 @@ class Asteroid:
 		idtemplateXml.appendChild(docXml.createTextNode(str(self.idTemplate)))
 		eggXml=docXml.createElement("egg")
 		eggXml.appendChild(docXml.createTextNode(str(self.egg)))
+		eggMiddleXml=docXml.createElement("eggmiddle")
+		eggMiddleXml.appendChild(docXml.createTextNode(str(self.eggMiddle)))
+		eggFarXml=docXml.createElement("eggfar")
+		eggFarXml.appendChild(docXml.createTextNode(str(self.eggFar)))
 		massXml=docXml.createElement("mass")
 		massXml.appendChild(docXml.createTextNode(str(self.mass)))
 		textXml=docXml.createElement("text")
@@ -181,10 +193,12 @@ class Asteroid:
 			astXml.appendChild(mineralsXml)
 		astXml.appendChild(nameXml)
 		astXml.appendChild(eggXml)
+		astXml.appendChild(eggMiddleXml)
+		astXml.appendChild(eggFarXml)
 		astXml.appendChild(idtemplateXml)
 		astXml.appendChild(massXml)
 		astXml.appendChild(textXml)
-		
+		print astXml.toxml()
 		return astXml
 		
 	def getXml(self,docXml=None):
@@ -207,6 +221,8 @@ class Asteroid:
 		hprpXml.appendChild(docXml.createTextNode(str(self.hprp)))
 		hprrXml=docXml.createElement("hprr")
 		hprrXml.appendChild(docXml.createTextNode(str(self.hprr)))
+		scaleXml=docXml.createElement("scale")
+		scaleXml.appendChild(docXml.createTextNode(str(self.scale)))
 		
 		astXml.appendChild(idXml)
 		astXml.appendChild(idtemplateXml)
@@ -216,7 +232,8 @@ class Asteroid:
 		astXml.appendChild(hprhXml)
 		astXml.appendChild(hprrXml)
 		astXml.appendChild(hprpXml)
+		astXml.appendChild(scaleXml)
 		
-				
+		#~ print astXml.toxml()		
 		return astXml
 	
