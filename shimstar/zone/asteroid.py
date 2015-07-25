@@ -73,10 +73,12 @@ class Asteroid:
 			self.mass=float(row[8])
 			self.text=row[9]
 			self.idTemplate=int(row[10])
-			self.scale=int(row[11])
+			self.scale=float(row[11])
 			self.eggMiddle = row[12]
 			self.eggFar = row[13]
 		cursor.close()
+		
+		
 		
 
 	@staticmethod
