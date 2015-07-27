@@ -200,7 +200,7 @@ class Asteroid:
 		astXml.appendChild(idtemplateXml)
 		astXml.appendChild(massXml)
 		astXml.appendChild(textXml)
-		print astXml.toxml()
+		# print astXml.toxml()
 		return astXml
 		
 	def getXml(self,docXml=None):
