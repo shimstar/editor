@@ -3,16 +3,17 @@ from item import *
 import xml.dom.minidom
 
 
-class Reactor(ShimstarItem):
+class Shield(ShimstarItem):
     def __init__(self, id, idTemplate=0, new=False):
-        super(Reactor, self).__init__(id, idTemplate)
-        print "reactor::init " + str(id) + "/" + str(idTemplate)
+        super(Shield, self).__init__(id, idTemplate)
+        print "shield::init " + str(id) + "/" + str(idTemplate)
         self.id = id
         self.label = ""
         self.templateId = idTemplate
         self.location = 0
         self.name = ""
-        self.energy = 0
+        self.hp = 0
+        self.tempo = 0
         self.cost = 0
         self.sell = 0
         self.energyCost = 0
@@ -30,15 +31,18 @@ class Reactor(ShimstarItem):
                 self.loadFromTemplate()
 
 
-    def getEnergy(self):
-        return self.energy
+    def getHP(self):
+        return self.hp
+
+    def getTempo(self):
+        return self.tempo
 
 
     def loadFromTemplate(self):
-        query = "SELECT star016_energy,star004_name, star004_energy, star004_mass,star004_space,star004_sell,star004_cost,star004_img,star004_type_star003,star004_id"
-        # query+=""
+        query = "SELECT star067_hitpoints,star004_name, star004_energy, star004_mass,star004_space,star004_sell,star004_cost,star004_img,star004_type_star003,star004_id"
+        query+=" ,star067_reload_tempo"
         query += " FROM star004_item_template IT"
-        query += " join star016_reactor w on w.star016_id = IT.star004_specific_starxxx "
+        query += " join star067_shield w on w.star067_id = IT.star004_specific_starxxx "
         # ~ query+=" WHERE w.star017_id ='" + str(self.templateId) + "' and star004_id='" + str(self.id) + "'"
         query += " WHERE star004_id='" + str(self.templateId) + "'"
         print "reactor::loadFromTemplate " + query
@@ -48,7 +52,7 @@ class Reactor(ShimstarItem):
         result_set = cursor.fetchall()
         for row in result_set:
             self.name = row[1]
-            self.energy = int(row[0])
+            self.hp = int(row[0])
             self.cost = int(row[6])
             self.sell = int(row[5])
             self.energyCost = int(row[2])
@@ -56,6 +60,7 @@ class Reactor(ShimstarItem):
             self.img = row[7]
             self.typeItem = row[8]
             self.itemTemplateId = int(row[9])
+            self.tempo = int (row[10])
         #~ self.templateId=int(row[10])
         # self.sound=str(row[10])
         #~ self.location=row[9]
@@ -66,10 +71,10 @@ class Reactor(ShimstarItem):
     # ~ super(engine,self).loadFromTemplate()
 
     def loadFromBdd(self):
-        query = "SELECT star016_energy, star004_name, star004_energy, star004_mass,star004_space,star004_sell,star004_cost,star004_img"
-        query += ",star004_type_star003,star006_location,star004_id "
+        query = "SELECT star067_hp, star004_name, star004_energy, star004_mass,star004_space,star004_sell,star004_cost,star004_img"
+        query += ",star004_type_star003,star006_location,star004_id,star067_reload_tempo "
         query += " FROM star006_item I Join  star004_item_template IT on I.star006_template_star004=star004_id "
-        query += " join star016_reactor w on w.star016_id = IT.star004_specific_starxxx "
+        query += " join star067_shield w on w.star067_id = IT.star004_specific_starxxx "
         query += "WHERE I.star006_id = '" + str(self.id) + "'"
         instanceDbConnector = shimDbConnector.getInstance()
         cursor = instanceDbConnector.getConnection().cursor()
@@ -78,7 +83,7 @@ class Reactor(ShimstarItem):
         result_set = cursor.fetchall()
         for row in result_set:
             self.name = row[1]
-            self.energy = int(row[0])
+            self.hp = int(row[0])
             self.cost = int(row[6])
             self.sell = int(row[5])
             self.energyCost = int(row[2])
@@ -88,15 +93,19 @@ class Reactor(ShimstarItem):
             self.typeItem = row[8]
             self.itemTemplateId = int(row[10])
             self.templateId = int(row[10])
+            self.tempo = int (row[11])
         cursor.close()
         self.loadSkill()
 
 
     def getSpecificXml(self, docXml, itemXml):
-        energieXml = docXml.createElement("energy")
-        energieXml.appendChild(docXml.createTextNode(str(self.energy)))
+        hpXml = docXml.createElement("hp")
+        hpXml.appendChild(docXml.createTextNode(str(self.hp)))
+        tempoXml = docXml.createElement("tempo")
+        tempoXml.appendChild(docXml.createTextNode(str(self.tempo)))
 
-        itemXml.appendChild(energieXml)
+        itemXml.appendChild(hpXml)
+        itemXml.appendChild(tempoXml)
 
 
     def getXml(self, docXml=None):
@@ -109,8 +118,10 @@ class Reactor(ShimstarItem):
         tplXml.appendChild(docXml.createTextNode(str(self.templateId)))
         typeitemXml = docXml.createElement("typeitem")
         typeitemXml.appendChild(docXml.createTextNode(str(self.typeItem)))
-        energieXml = docXml.createElement("energy")
-        energieXml.appendChild(docXml.createTextNode(str(self.energy)))
+        hpXml = docXml.createElement("hp")
+        hpXml.appendChild(docXml.createTextNode(str(self.hp)))
+        tempoXml = docXml.createElement("tempo")
+        tempoXml.appendChild(docXml.createTextNode(str(self.tempo)))
 
         costXml = docXml.createElement("cost")
         costXml.appendChild(docXml.createTextNode(str(self.cost)))
@@ -130,7 +141,6 @@ class Reactor(ShimstarItem):
         itemXml.appendChild(nameXml)
         itemXml.appendChild(tplXml)
         itemXml.appendChild(typeitemXml)
-        itemXml.appendChild(energieXml)
         itemXml.appendChild(sellXml)
         itemXml.appendChild(energyXml)
         itemXml.appendChild(spaceXml)
@@ -138,14 +148,16 @@ class Reactor(ShimstarItem):
         itemXml.appendChild(locationXml)
         itemXml.appendChild(costXml)
         itemXml.appendChild(soundXml)
+        itemXml.appendChild(hpXml)
+        itemXml.appendChild(tempoXml)
         #~ print "engine::getXml" + itemXml.toxml()
         return itemXml
 
 
     @staticmethod
-    def getListReactor():
+    def getListShield():
         query = "SELECT STAR006_id FROM star006_item I Join  star004_item_template IT on I.star006_template_star004=star004_id"
-        query += " WHERE star004_type_star003 = 3"
+        query += " WHERE star004_type_star003 = 12"
         instanceDbConnector = shimDbConnector.getInstance()
         cursor = instanceDbConnector.getConnection().cursor()
         cursor.execute(query)
@@ -169,8 +181,8 @@ class Reactor(ShimstarItem):
             cursor.execute(query)
             cursor.close()
 
-            query = "update star016_reactor"
-            query += " set star016_energy = " + str(self.energy)
+            query = "update star067_shield"
+            query += " set star067_hp = " + str(self.hp) + ", star067_reload_tempo = " + str(self.tempo)
             query += " where star016_id = " + str(self.templateId)
             #~ print query
             instanceDbConnector = shimDbConnector.getInstance()
@@ -180,8 +192,8 @@ class Reactor(ShimstarItem):
 
             instanceDbConnector.commit()
         else:
-            query = "insert into star016_reactor "
-            query += " (star016_energy) values ('" + str(self.energy) + "')"
+            query = "insert into star067_shield "
+            query += " (star0676_hp,star067_reload_tempo) values ('" + str(self.hp) + "','" + str(self.tempo) +"')"
             instanceDbConnector = shimDbConnector.getInstance()
             cursor = instanceDbConnector.getConnection().cursor()
             cursor.execute(query)
@@ -208,7 +220,7 @@ class Reactor(ShimstarItem):
         cursor.execute(query)
         cursor.close()
 
-        query = "delete from star016_reactor where star016_id = " + str(self.templateId)
+        query = "delete from star067_shield where star067_id = " + str(self.templateId)
         instanceDbConnector = shimDbConnector.getInstance()
         cursor = instanceDbConnector.getConnection().cursor()
         cursor.execute(query)
@@ -216,5 +228,3 @@ class Reactor(ShimstarItem):
 
         instanceDbConnector.commit()
 
-	
-	

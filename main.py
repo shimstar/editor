@@ -28,6 +28,7 @@ from shimstar.item.mining import *
 from shimstar.item.mineral import *
 from shimstar.item.ship import *
 from shimstar.item.reactor import *
+from shimstar.item.shield import *
 
 ID_MENU_ITEMS = 10
 ID_MENU_ZONE = 20
@@ -195,7 +196,9 @@ class MyFrame(wx.MDIParentFrame):
             elif it.getTypeItem() == C_ITEM_ENERGY:
                 min = Reactor(0, i)
                 itXml = min.getXml()
-                print "Reactor " + str(itXml.toxml())
+            elif it.getTypeItem() == C_ITEM_SHIELD:
+                min = Shield(0,i)
+                itXml = min.getXml()
             elif it.getTypeItem() == C_ITEM_SHIP:
                 print "main::ship " + str(i) + "/" + str(it.getSpecific())
                 sh = Ship(0, i)
